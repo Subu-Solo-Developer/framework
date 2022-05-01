@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:framework/app/app.dart';
 
 void main() {
-  late DefaultInitializer sut;
+  late IInitializer sut;
 
   setUp(() {
-    sut = DefaultInitializer();
+    sut = DefaultApplicationInitializer();
   });
 
   group('[DefaultInitializer: init() Method Test]', () {

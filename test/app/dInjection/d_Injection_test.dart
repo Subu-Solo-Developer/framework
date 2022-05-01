@@ -7,27 +7,25 @@ import 'package:framework/framework.dart';
 import 'package:logger/src/logger.dart';
 
 void main() {
-  late DefaultApplicationDependecyRegister sut;
+  late IDependencyRegister sut;
   late final Logger logger;
   late final IPreferenceUtil preference;
   setUp(() {
     sut = DefaultApplicationDependecyRegister();
   });
 
-  group('[DefaultApplicationDependecyRegister: initAllRegisters Method Test]',
-      () {
+  group('[DefaultApplicationDependecyRegister: initRegister Method Test]', () {
     test(
-      "1. Test whether it is invoked the initAllRegisters method or not?",
+      "1. Test whether it is invoked the initRegister method or not?",
       () {
-        sut.initAllRegisters();
+        sut.initRegister();
       },
     );
     test(
       "2. Test whether it is registered the CustomLoggger or not?",
       () {
-        logger =
-            DefaultApplicationDependecyRegister.getInstance()<ICustomLogger>()
-                .getLogger(DefaultApplicationDependecyRegister);
+        logger = DependencyInjector.getInstance()<ICustomLogger>()
+            .getLogger(DefaultApplicationDependecyRegister);
         logger.i("Custom Logger Initialized Successfully");
         logger.w("Custom Logger Initialized Successfully");
         logger.d("Custom Logger Initialized Successfully");
@@ -38,8 +36,7 @@ void main() {
     test(
       "3. Test whether it is registered the PreferenceUtil or not?",
       () {
-        preference = DefaultApplicationDependecyRegister.getInstance()<
-            IPreferenceUtil>();
+        preference = DependencyInjector.getInstance()<IPreferenceUtil>();
       },
     );
     test(
@@ -52,13 +49,13 @@ void main() {
         String actualSecondData = "Default Value";
         String expectedSecondResult;
 
-        //! Combination One
+        //! Case:1
         preference.setPreference(firstDataKey, actualFirstData);
         expectedFirstResult =
             preference.getPreference(firstDataKey, "Default Value");
         expect(actualFirstData, expectedFirstResult);
 
-        //! Combination Two
+        //! Case:2
         expectedSecondResult =
             preference.getPreference(secondDataKey, actualSecondData);
         expect(actualSecondData, expectedSecondResult);

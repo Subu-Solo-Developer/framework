@@ -1,8 +1,34 @@
 import '../../../framework.dart';
 
-class DefaultInitializer implements IInitializer {
+class DefaultApplicationInitializer extends Initializer {
+  @override
+  enrollAllCustomRegisters() {
+    enrollRegister(DefaultApplicationDependecyRegister());
+  }
+}
+
+abstract class Initializer implements IInitializer {
+  Set<IDependencyRegister> registers = {};
+
   @override
   void init() {
-    DefaultApplicationDependecyRegister().initAllRegisters();
+    enrollAllCustomRegisters();
+    _initializeAllEnrolledRegisters();
+  }
+
+  _initializeAllEnrolledRegisters() {
+    for (IDependencyRegister dependencyRegister in registers) {
+      dependencyRegister.initRegister();
+    }
+  }
+
+  @override
+  enrollRegister(IDependencyRegister dependencyRegister) {
+    registers.add(dependencyRegister);
+  }
+
+  @override
+  enrollSetOfRegisters(Set<IDependencyRegister> dependencyRegisters) {
+    registers.addAll(dependencyRegisters);
   }
 }
