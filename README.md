@@ -10,79 +10,171 @@ For general information about developing packages, see the Dart guide for
 and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
-
-This package is very helpful for all flutter projects. Which you are trying to create it from scratch.
+# Framework
+This is the package which was developed to minimize some kind of quite repeated tasks like Logger, Dependecy Injection (IOC), Shared Preference storage,..etc in flutter application development by doing a simple configuration
 
 ## Features
 
-1. It helps you to add beutiful logging
-2. It have the basic config setup required for shared preference. So, you can easily store and retrieve any unsecured key value pairs.
-3. Implemented the GetIt IOC feature, simply by doing small changes. You can easily achieve dependency Injection features.
+1. Helps to configure your runtime instances very easily with this structured configuration for DI (IOC). Refer the Usage section for an detailed steps
+2. Helps to add pre-defined logger functionality. Refer the Usage section for an detailed steps
+3. Helps to add pre-defined shared preference. So, you can easily store and retrieve any unsecured key value pairs in it with minimal configuration. Refer the Usage section for an detailed steps
 
 ## Getting started
 
-1. Need to add this package as your dependency in your project pubspec.yaml file as like below
-
-2. This packages is dependent upon below list of other packages. So, you don't required to readd those dependencies again in to your project.
-   flutter_lints: ^1.0.0
-   logger: ^1.1.0
-   intl: ^0.17.0
-   shared_preferences: ^2.0.13
-   get_it: ^7.2.0
+- At first you need to add this package as your dependency in your project pubspec.yaml file as like below
+```dart
+dependencies:
+  flutter:
+    sdk: flutter  
+  framework:
+    git:
+      url: https://github.com/Subu-Solo-Developer/framework.git
+```
 
 ## Usage
-
-1. You need to create your own Initializer class by extending the package DefaultInitializer class
-   as like below. And where you must need to call DefaultInitializer class init method. So, that the package will work.
-
+#### 1. Dependency Injection (IOC) Usage
+* At first create all your dependency related classes
+##### Example:
+* In this example we have created a ```PhotoService``` class as an dependecy class
 ```dart
-class ApplicationInitializer extends DefaultInitializer {
+abstract class IPhotoService {
+  String fetchPhotoName();
+}
+
+class PhotoService extends IPhotoService {
   @override
-  void init() {
-    super.init();
+  String fetchPhotoName() {
+    return "photo.png";
+  }
+}
+
+```
+- Then you need to create your custom register simply by extending our product class ```DependencyRegister``` and need to overrite the below methods based on your need.
+``` dart
+import 'package:framework/app/app.dart';
+
+class ServiceDependecyRegister extends DependencyRegister {
+  @override
+  registerAllSingletonInstances() {
+    getIt.registerSingleton<IPhotoService>(PhotoService());
+  }
+
+  @override
+  registerAllSingletonInstancesWithDependency() {}
+}
+
+```
+- Once you have created your custom register classes, then you need to enroll those registers in to our product initializer by simply extending our product class ```Initializer``` 
+``` dart
+import 'package:framework/app/app.dart';
+
+import '../dInjection/d_Injection.dart';
+
+class CustomApplictionInitializer extends Initializer {
+  @override
+  enrollAllCustomRegisters() {
+    enrollRegister(ServiceDependecyRegister());
+  }
+}
+
+```
+- Once you have done with both CustomRegister creation with required Runtime instance mapping & Custom Register enrollement in Initializer. Then you need to call the init method as like below.
+``` dart
+import 'package:flutter/material.dart';
+import 'package:test_project/app/initializer/initializer.dart';
+import 'package:test_project/page.dart';
+
+void main() {
+  init();
+  runApp(MyApp());
+}
+
+init() {
+  CustomApplictionInitializer().init();
+}
+```
+- Now, most of the configuration was completed. Inorder to access our registered runtime instances you need to use the below line of code in all required places.
+``` dart
+   IPhotoService photoService =
+         DependencyInjector.getInstance()<IPhotoService>();
+```
+##### Some Pre-COnfigured Product Dependencies are 
+``` dart
+final logger =
+      DependencyInjector.getInstance()<ILogger>().getLogger(HomePage);
+
+static final preferences = DependencyInjector.getInstance()<IPreferenceUtil>();
+```
+##### Example
+``` dart
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key? key}) : super(key: key);
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  IPhotoService photoService =
+      DependencyInjector.getInstance()<IPhotoService>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.blue,
+      body: Center(
+        child: Text(photoService.fetchPhotoName()), // Will give the photo.png
+      ),
+    );
   }
 }
 ```
 
-2. In your custom Initializer class you can add your own Dependency Injection related Registers as like below example. So, that you can get those object instance in any of your code and inject it in to some other classes.
+## Important Point to Remember
+- If you want to register any duplicate instances which was already registered. Then you must unregister those previous one before register your new one in to our registry or else it might complaint
+##### Example Scenario:
+- Let's take an scenori like, you don't like the default product logger implementation, so you want to implement your own custom logger implementation. In this case you must unregister that old product logger instance from registry before register your new custom logger instance.
 
-3. How do accees any registered framework object instance or your custom object instance.
-   Below are the way to access this farmework package related CustomLogger, PreferencesUtil
-   This is the only two framework object instance configured. If you want to change this also you can unregister this instances and reregister your own custom object instances for logger and shared preferences as like below example 2.
-
-Example: 1
-
-```dart
-final logger =
-      DependencyInjector.getInstance()<ICustomLogger>().getLogger(HomePage);
-
-static final preferences = DependencyInjector.getInstance()<IPreferenceUtil>();
-```
-
-Example: 2
+##### Example:
 
 ```dart
 import 'package:framework/framework.dart';
 import 'package:logger/logger.dart';
 
-class ApplicationInitializer extends DefaultInitializer {
-  @override
-  void init() {
-    super.init();
-    DependencyInjector.getInstance().unregister(
-        instanceName: "ICustomLogger",
-        instance: DependencyInjector.getInstance()<ICustomLogger>());
-    DependencyInjector.getInstance()
-        .registerSingleton<ICustomLogger>(OwnLogger());
+class ServiceDependecyRegister extends DependencyRegister {
+  
+   @override
+  registerAllSingletonInstances() {
+    getIt.unregister(
+        instanceName: "ILogger",
+        instance: DependencyInjector.getInstance()<ILogger>());
+    getIt.registerSingleton<ILogger>(OwnCustomLogger());
   }
+
+  @override
+  registerAllSingletonInstancesWithDependency() {}
+ 
 }
 
-class OwnLogger extends ICustomLogger {
+class OwnCustomLogger extends ILogger {
   @override
   Logger getLogger(Type type) {
     return Logger();
   }
 }
+```
+
+## Credits
+  List of Dependent Packages for this framework package are
+ ```dart
+ dependencies:
+  flutter:
+    sdk: flutter  
+  flutter_lints: ^1.0.0
+  logger: ^1.1.0
+  intl: ^0.17.0
+  shared_preferences: ^2.0.13
+  get_it: ^7.2.0
 ```
 
 ## Additional information
